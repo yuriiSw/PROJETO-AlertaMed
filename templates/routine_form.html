@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Editar Rotina' if routine else 'Adicionar Nova Rotina' }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg mx-4">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">{{ 'Editar Rotina' if routine else 'Adicionar Nova Rotina' }}</h1>
+        <form method="POST" action="{{ url_for('edit_routine', routine_id=routine._id) if routine else url_for('add_routine') }}" class="space-y-6">
+            <div>
+                <label for="pacient_name" class="block text-sm font-medium text-gray-700">Nome do Paciente</label>
+                <input type="text" id="pacient_name" name="pacient_name" value="{{ routine.get('pacient_name') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="med_name" class="block text-sm font-medium text-gray-700">Nome do Medicamento</label>
+                <input type="text" id="med_name" name="med_name" value="{{ routine.get('med_name') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="instructions" class="block text-sm font-medium text-gray-700">Instruções de Uso</label>
+                <input type="text" id="instructions" name="instructions" value="{{ routine.get('instructions') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="total_qty" class="block text-sm font-medium text-gray-700">Quantidade Total na Embalagem</label>
+                <input type="number" id="total_qty" name="total_qty" value="{{ routine.get('total_qty') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="frequency_hours" class="block text-sm font-medium text-gray-700">Frequência (horas)</label>
+                <input type="number" id="frequency_hours" name="frequency_hours" value="{{ routine.get('frequency_hours') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="first_dose" class="block text-sm font-medium text-gray-700">Horário da Primeira Dose</label>
+                <input type="datetime-local" id="first_dose" name="first_dose" value="{{ routine.get('first_dose').isoformat() if routine and routine.get('first_dose') else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Salvar Rotina
+            </button>
+        </form>
+    </div>
+</body>
+</html>
