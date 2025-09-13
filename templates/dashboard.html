@@ -23,46 +23,60 @@
 
     <main class="container mx-auto px-4 py-8">
         <div class="mb-8">
-            <a href="{{ url_for('add_routine') }}" class="py-3 px-6 rounded-full font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md">
+            <a href="{{ url_for('add_routine') }}" class="py-3 px-6 rounded-full font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-lg">
                 + Adicionar Nova Rotina
             </a>
         </div>
 
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="space-y-6">
             {% for routine in routines %}
             <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col justify-between">
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2">{{ routine.pacient_name }}</h2>
-                    <h3 class="text-lg font-medium text-gray-700 mb-4">{{ routine.med_name }}</h3>
-                    <p class="text-sm text-gray-600 mb-2">Instruções: {{ routine.instructions }}</p>
-                    <p class="text-sm text-gray-600 mb-2">Frequência: {{ routine.frequency_hours }} horas</p>
-                    <p class="text-sm text-gray-600 mb-2">Quantidade restante: <span class="font-bold text-lg {{ 'text-red-500' if routine.remaining_qty == 0 else 'text-green-500' }}">{{ routine.remaining_qty }} / {{ routine.total_qty }}</span></p>
-                    {% if routine.next_dose %}
-                        <p class="text-sm text-gray-600 mb-4">Próxima dose: <span class="font-semibold">{{ routine.next_dose.strftime('%d/%m/%Y às %H:%M') }}</span></p>
-                    {% else %}
-                        <p class="text-sm text-gray-600 mb-4">Próxima dose: Ainda não definida</p>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ routine.med_name }}</h2>
+                    <p class="text-gray-600 mb-1">Para: <span class="font-semibold">{{ routine.pacient_name }}</span></p>
+                    <p class="text-gray-600 mb-1">Dose: <span class="font-semibold">
+                        {% if 'dose_qty' in routine %}
+                            {% if routine.unit == 'ml' or routine.unit == 'gramas' %}
+                                {{ '%.2f'|format(routine.dose_qty) }} {{ routine.unit }}
+                            {% else %}
+                                {{ '%.0f'|format(routine.dose_qty) }} {{ routine.unit }}
+                            {% endif %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span></p>
+                    <p class="text-gray-600 mb-1">Frequência: <span class="font-semibold">a cada {{ routine.frequency_hours }}h</span></p>
+                    <p class="text-gray-600 mb-1">Quantidade Restante: <span class="font-semibold">{{ '%.0f'|format(routine.remaining_qty) }}/{{ '%.0f'|format(routine.total_qty) }}</span></p>
+                    <p class="text-gray-600 mb-1">Próxima Dose: <span class="font-semibold">{{ routine.next_dose.strftime('%d/%m/%Y às %H:%M') if routine.next_dose else 'N/A' }}</span></p>
+                    
+                    {% if routine.instructions %}
+                    <div class="bg-gray-50 p-4 rounded-lg mt-4">
+                        <h4 class="font-semibold text-gray-700">Instruções:</h4>
+                        <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ routine.instructions }}</p>
+                    </div>
                     {% endif %}
                 </div>
-                
+
                 <div class="mt-4 flex flex-wrap gap-2">
                     <form action="{{ url_for('take_dose', routine_id=routine._id) }}" method="POST" class="flex-grow">
                         <button type="submit" class="w-full py-2 px-4 rounded-md font-semibold text-white bg-green-500 hover:bg-green-600 transition-colors">
-                            Marcar como Tomado
+                            Tomar Dose
                         </button>
                     </form>
                     <a href="{{ url_for('edit_routine', routine_id=routine._id) }}" class="flex-grow py-2 px-4 rounded-md font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-colors text-center">
                         Editar
+                    </a>
+                    <a href="{{ url_for('dose_history', routine_id=routine._id) }}" class="flex-grow py-2 px-4 rounded-md font-semibold text-white bg-teal-500 hover:bg-teal-600 transition-colors text-center">
+                        Histórico
                     </a>
                     <form action="{{ url_for('delete_routine', routine_id=routine._id) }}" method="POST" class="flex-grow">
                         <button type="submit" class="w-full py-2 px-4 rounded-md font-semibold text-white bg-gray-500 hover:bg-gray-600 transition-colors">
                             Deletar
                         </button>
                     </form>
-
-                    <!-- Adicionado o botão "Reabastecer" -->
                     {% if routine.remaining_qty == 0 %}
                     <form action="{{ url_for('refill_routine', routine_id=routine._id) }}" method="POST" class="flex-grow">
-                        <button type="submit" class="w-full py-2 px-4 rounded-md font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-colors mt-2">
+                        <button type="submit" class="w-full py-2 px-4 rounded-md font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-colors">
                             Reabastecer
                         </button>
                     </form>

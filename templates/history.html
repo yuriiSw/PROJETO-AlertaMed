@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Doses</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">Histórico de Doses</h1>
+            <a href="{{ url_for('dashboard') }}" class="py-2 px-4 rounded-full font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors">Voltar</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Medicação: {{ routine.med_name }}</h2>
+            <h3 class="text-lg font-medium text-gray-700">Paciente: {{ routine.pacient_name }}</h3>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Doses Tomadas</h2>
+            {% if doses %}
+            <ul class="space-y-4">
+                {% for dose in doses %}
+                <li class="p-4 rounded-md bg-gray-50 flex items-center justify-between shadow-sm">
+                    <span class="text-gray-700">
+                        Dose tomada em: <span class="font-semibold">{{ dose.dose_time.strftime('%d/%m/%Y às %H:%M:%S') }}</span>
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-500 text-center">Nenhuma dose registrada ainda.</p>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>

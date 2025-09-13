@@ -1,6 +1,7 @@
 from database import routines
 from datetime import datetime, timedelta
 import time
+from bson.objectid import ObjectId
 
 # Este script deve ser executado separadamente para verificar as notificações.
 # Para simplificar, as notificações serão impressas no console.
@@ -9,13 +10,14 @@ def check_notifications():
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Verificando rotinas para notificações...")
     
     now = datetime.now()
-    # Verifica rotinas que precisam de notificação 10 minutos antes ou na hora exata.
-    # A verificação é feita em um intervalo de 11 minutos para garantir que a notificação
-    # de 10 minutos seja enviada.
-    ten_minutes_from_now = now + timedelta(minutes=11)
     
+    # Busca rotinas cuja próxima dose está entre 10 minutos no futuro e agora.
+    # Isso garante que as notificações sejam enviadas nos 10 minutos que antecedem a dose.
     due_routines = routines.find({
-        'next_dose': {'$lt': ten_minutes_from_now}
+        'next_dose': {
+            '$lte': now + timedelta(minutes=10),
+            '$gte': now - timedelta(minutes=1)
+        }
     })
     
     for routine in due_routines:
@@ -24,7 +26,7 @@ def check_notifications():
         minutes_to_dose = int(time_to_dose.total_seconds() / 60)
         
         # Lógica de notificação
-        if minutes_to_dose <= 10 and minutes_to_dose > 0:
+        if minutes_to_dose > 0:
             print(f"--- ATENÇÃO: Lembrete (10 min antes) ---")
             print(f"Paciente: {routine['pacient_name']}")
             print(f"Medicação: {routine['med_name']}")

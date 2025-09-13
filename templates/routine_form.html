@@ -19,32 +19,81 @@
         <form method="POST" action="{{ url_for('edit_routine', routine_id=routine._id) if routine else url_for('add_routine') }}" class="space-y-6">
             <div>
                 <label for="pacient_name" class="block text-sm font-medium text-gray-700">Nome do Paciente</label>
-                <input type="text" id="pacient_name" name="pacient_name" value="{{ routine.get('pacient_name') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <input type="text" id="pacient_name" name="pacient_name" value="{{ routine.get('pacient_name', '') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
+
             <div>
                 <label for="med_name" class="block text-sm font-medium text-gray-700">Nome do Medicamento</label>
-                <input type="text" id="med_name" name="med_name" value="{{ routine.get('med_name') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <input type="text" id="med_name" name="med_name" value="{{ routine.get('med_name', '') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
+
             <div>
-                <label for="instructions" class="block text-sm font-medium text-gray-700">Instruções de Uso</label>
-                <input type="text" id="instructions" name="instructions" value="{{ routine.get('instructions') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <label for="med_type" class="block text-sm font-medium text-gray-700">Tipo de Medicamento</label>
+                <div class="mt-1 flex space-x-4">
+                    <button type="button" onclick="setUnit('comprimidos')" class="py-2 px-4 rounded-md font-semibold {{ 'bg-indigo-600 text-white' if routine and routine.get('unit') == 'comprimidos' else 'bg-gray-200 text-gray-700' }} hover:bg-indigo-500 hover:text-white transition-colors">Comprimidos</button>
+                    <button type="button" onclick="setUnit('ml')" class="py-2 px-4 rounded-md font-semibold {{ 'bg-indigo-600 text-white' if routine and routine.get('unit') == 'ml' else 'bg-gray-200 text-gray-700' }} hover:bg-indigo-500 hover:text-white transition-colors">Ml</button>
+                    <button type="button" onclick="setUnit('gramas')" class="py-2 px-4 rounded-md font-semibold {{ 'bg-indigo-600 text-white' if routine and routine.get('unit') == 'gramas' else 'bg-gray-200 text-gray-700' }} hover:bg-indigo-500 hover:text-white transition-colors">Gramas</button>
+                </div>
             </div>
+
             <div>
-                <label for="total_qty" class="block text-sm font-medium text-gray-700">Quantidade Total na Embalagem</label>
-                <input type="number" id="total_qty" name="total_qty" value="{{ routine.get('total_qty') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <label for="dose_qty" id="dose-qty-label" class="block text-sm font-medium text-gray-700">Quantidade por Dose ({{ 'Comprimidos' if not routine or routine.get('unit') == 'comprimidos' else routine.get('unit').capitalize() }})</label>
+                <input type="number" step="any" id="dose_qty" name="dose_qty" value="{{ '%.2f'|format(routine.get('dose_qty', 0)) if routine and (routine.get('unit') == 'ml' or routine.get('unit') == 'gramas') else '%.0f'|format(routine.get('dose_qty', 0)) if routine and routine.get('unit') == 'comprimidos' else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
+
             <div>
-                <label for="frequency_hours" class="block text-sm font-medium text-gray-700">Frequência (horas)</label>
-                <input type="number" id="frequency_hours" name="frequency_hours" value="{{ routine.get('frequency_hours') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <label for="frequency_hours" class="block text-sm font-medium text-gray-700">Frequência (em horas)</label>
+                <input type="number" id="frequency_hours" name="frequency_hours" value="{{ routine.get('frequency_hours', '') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
+
             <div>
-                <label for="first_dose" class="block text-sm font-medium text-gray-700">Horário da Primeira Dose</label>
+                <label for="total_qty" id="total-qty-label" class="block text-sm font-medium text-gray-700">Quantidade Total ({{ 'Comprimidos' if not routine or routine.get('unit') == 'comprimidos' else routine.get('unit').capitalize() }})</label>
+                <input type="number" step="any" id="total_qty" name="total_qty" value="{{ '%.2f'|format(routine.get('total_qty', 0)) if routine and (routine.get('unit') == 'ml' or routine.get('unit') == 'gramas') else '%.0f'|format(routine.get('total_qty', 0)) if routine and routine.get('unit') == 'comprimidos' else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label for="instructions" class="block text-sm font-medium text-gray-700">Instruções Adicionais</label>
+                <textarea id="instructions" name="instructions" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">{{ routine.get('instructions', '') if routine else '' }}</textarea>
+            </div>
+            
+            <div>
+                <label for="first_dose" class="block text-sm font-medium text-gray-700">Data e Hora da Primeira Dose</label>
                 <input type="datetime-local" id="first_dose" name="first_dose" value="{{ routine.get('first_dose').isoformat() if routine and routine.get('first_dose') else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
+            <input type="hidden" id="unit" name="unit" value="{{ routine.get('unit') if routine else 'comprimidos' }}">
             <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 Salvar Rotina
             </button>
         </form>
+        <a href="{{ url_for('dashboard') }}" class="mt-4 block text-center text-sm font-medium text-indigo-600 hover:text-indigo-500">Voltar para o Dashboard</a>
     </div>
+
+    <script>
+        function setUnit(unit) {
+            document.getElementById('dose-qty-label').innerText = `Quantidade por Dose (${unit.charAt(0).toUpperCase() + unit.slice(1)})`;
+            document.getElementById('total-qty-label').innerText = `Quantidade Total (${unit.charAt(0).toUpperCase() + unit.slice(1)})`;
+            document.getElementById('unit').value = unit.toLowerCase();
+
+            // Atualiza o tipo de input baseado na unidade
+            const doseInput = document.getElementById('dose_qty');
+            const totalInput = document.getElementById('total_qty');
+            if (unit === 'comprimidos') {
+                doseInput.step = '1';
+                totalInput.step = '1';
+                doseInput.value = parseInt(doseInput.value);
+                totalInput.value = parseInt(totalInput.value);
+            } else {
+                doseInput.step = 'any';
+                totalInput.step = 'any';
+            }
+        }
+
+        window.onload = function() {
+            const initialUnit = document.getElementById('unit').value;
+            if (initialUnit) {
+                setUnit(initialUnit);
+            }
+        }
+    </script>
 </body>
 </html>
