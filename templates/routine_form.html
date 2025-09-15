@@ -6,92 +6,236 @@
     <title>{{ 'Editar Rotina' if routine else 'Adicionar Nova Rotina' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e6fffa 0%, #d1f7e3 100%);
+            min-height: 100vh;
+        }
+        .btn-green {
+            background-color: #16a34a; /* Verde forte */
+            color: white;
+            transition-property: background-color, transform, box-shadow;
+            transition-duration: 300ms;
+        }
+        .btn-green:hover {
+            background-color: #15803d; /* Verde mais escuro no hover */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-gray {
+            background-color: #e5e7eb; /* Cinza claro suave */
+            color: #4b5563; /* Cinza escuro */
+            transition-property: background-color, color, transform, box-shadow;
+            transition-duration: 300ms;
+        }
+        .btn-gray:hover {
+            background-color: #d1d5db; /* Cinza mais escuro no hover */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .input-field:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
+            border-color: #16a34a;
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg mx-4">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">{{ 'Editar Rotina' if routine else 'Adicionar Nova Rotina' }}</h1>
-        <form method="POST" action="{{ url_for('edit_routine', routine_id=routine._id) if routine else url_for('add_routine') }}" class="space-y-6">
+<body class="flex items-center justify-center py-12">
+    <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-2xl w-full max-w-xl mx-4">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-8">{{ 'Editar Rotina' if routine else 'Adicionar Nova Rotina' }}</h1>
+        <form method="POST" action="{{ url_for('edit_routine', routine_id=routine._id) if routine else url_for('add_routine') }}" class="space-y-6" enctype="multipart/form-data">
+            
             <div>
-                <label for="pacient_name" class="block text-sm font-medium text-gray-700">Nome do Paciente</label>
-                <input type="text" id="pacient_name" name="pacient_name" value="{{ routine.get('pacient_name', '') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <label for="pacient_name" class="block text-xl font-medium text-gray-700">Nome do Paciente</label>
+                <input type="text" id="pacient_name" name="pacient_name" value="{{ routine.get('pacient_name', '') if routine else '' }}" required class="mt-2 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm input-field text-lg">
             </div>
 
             <div>
-                <label for="med_name" class="block text-sm font-medium text-gray-700">Nome do Medicamento</label>
-                <input type="text" id="med_name" name="med_name" value="{{ routine.get('med_name', '') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <label for="med_name" class="block text-xl font-medium text-gray-700">Nome do Medicamento</label>
+                <input type="text" id="med_name" name="med_name" value="{{ routine.get('med_name', '') if routine else '' }}" required class="mt-2 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm input-field text-lg">
             </div>
 
             <div>
-                <label for="med_type" class="block text-sm font-medium text-gray-700">Tipo de Medicamento</label>
-                <div class="mt-1 flex space-x-4">
-                    <button type="button" onclick="setUnit('comprimidos')" class="py-2 px-4 rounded-md font-semibold {{ 'bg-indigo-600 text-white' if routine and routine.get('unit') == 'comprimidos' else 'bg-gray-200 text-gray-700' }} hover:bg-indigo-500 hover:text-white transition-colors">Comprimidos</button>
-                    <button type="button" onclick="setUnit('ml')" class="py-2 px-4 rounded-md font-semibold {{ 'bg-indigo-600 text-white' if routine and routine.get('unit') == 'ml' else 'bg-gray-200 text-gray-700' }} hover:bg-indigo-500 hover:text-white transition-colors">Ml</button>
-                    <button type="button" onclick="setUnit('gramas')" class="py-2 px-4 rounded-md font-semibold {{ 'bg-indigo-600 text-white' if routine and routine.get('unit') == 'gramas' else 'bg-gray-200 text-gray-700' }} hover:bg-indigo-500 hover:text-white transition-colors">Gramas</button>
+                <label class="block text-xl font-medium text-gray-700 mb-2">Tipo de Medicamento</label>
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                    <button type="button" onclick="setUnit(event, 'comprimidos')" class="w-full py-3 px-6 rounded-full font-semibold text-lg {{ 'btn-green' if not routine or routine.get('unit') == 'comprimidos' else 'btn-gray' }}">Comprimidos</button>
+                    <button type="button" onclick="setUnit(event, 'ml')" class="w-full py-3 px-6 rounded-full font-semibold text-lg {{ 'btn-green' if routine and routine.get('unit') == 'ml' else 'btn-gray' }}">Ml</button>
+                    <button type="button" onclick="setUnit(event, 'gramas')" class="w-full py-3 px-6 rounded-full font-semibold text-lg {{ 'btn-green' if routine and routine.get('unit') == 'gramas' else 'btn-gray' }}">Gramas</button>
                 </div>
             </div>
 
             <div>
-                <label for="dose_qty" id="dose-qty-label" class="block text-sm font-medium text-gray-700">Quantidade por Dose ({{ 'Comprimidos' if not routine or routine.get('unit') == 'comprimidos' else routine.get('unit').capitalize() }})</label>
-                <input type="number" step="any" id="dose_qty" name="dose_qty" value="{{ '%.2f'|format(routine.get('dose_qty', 0)) if routine and (routine.get('unit') == 'ml' or routine.get('unit') == 'gramas') else '%.0f'|format(routine.get('dose_qty', 0)) if routine and routine.get('unit') == 'comprimidos' else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-
-            <div>
-                <label for="frequency_hours" class="block text-sm font-medium text-gray-700">Frequência (em horas)</label>
-                <input type="number" id="frequency_hours" name="frequency_hours" value="{{ routine.get('frequency_hours', '') if routine else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-
-            <div>
-                <label for="total_qty" id="total-qty-label" class="block text-sm font-medium text-gray-700">Quantidade Total ({{ 'Comprimidos' if not routine or routine.get('unit') == 'comprimidos' else routine.get('unit').capitalize() }})</label>
-                <input type="number" step="any" id="total_qty" name="total_qty" value="{{ '%.2f'|format(routine.get('total_qty', 0)) if routine and (routine.get('unit') == 'ml' or routine.get('unit') == 'gramas') else '%.0f'|format(routine.get('total_qty', 0)) if routine and routine.get('unit') == 'comprimidos' else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-
-            <div>
-                <label for="instructions" class="block text-sm font-medium text-gray-700">Instruções Adicionais</label>
-                <textarea id="instructions" name="instructions" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">{{ routine.get('instructions', '') if routine else '' }}</textarea>
+                <label for="dose_qty" id="dose-qty-label" class="block text-xl font-medium text-gray-700">Quantidade por Dose</label>
+                <input type="number" step="any" min="1" id="dose_qty" name="dose_qty" value="{{ '%.2f'|format(routine.get('dose_qty', 0)) if routine and (routine.get('unit') == 'ml' or routine.get('unit') == 'gramas') else '%.0f'|format(routine.get('dose_qty', 0)) if routine and routine.get('unit') == 'comprimidos' else '' }}" required class="mt-2 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm input-field text-lg" onkeydown="validateNumberInput(event)">
             </div>
             
             <div>
-                <label for="first_dose" class="block text-sm font-medium text-gray-700">Data e Hora da Primeira Dose</label>
-                <input type="datetime-local" id="first_dose" name="first_dose" value="{{ routine.get('first_dose').isoformat() if routine and routine.get('first_dose') else '' }}" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <label class="block text-xl font-medium text-gray-700 mb-2">Frequência (Opções)</label>
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+                    <button type="button" onclick="setFrequency(event, 24)" class="w-full py-3 px-6 rounded-full font-semibold text-lg {{ 'btn-green' if not routine or routine.get('frequency_hours') == 24 else 'btn-gray' }}">24h</button>
+                    <button type="button" onclick="setFrequency(event, 12)" class="w-full py-3 px-6 rounded-full font-semibold text-lg {{ 'btn-green' if routine and routine.get('frequency_hours') == 12 else 'btn-gray' }}">12h</button>
+                    <button type="button" onclick="setFrequency(event, 8)" class="w-full py-3 px-6 rounded-full font-semibold text-lg {{ 'btn-green' if routine and routine.get('frequency_hours') == 8 else 'btn-gray' }}">8h</button>
+                    <button type="button" onclick="setFrequency(event, 6)" class="w-full py-3 px-6 rounded-full font-semibold text-lg {{ 'btn-green' if routine and routine.get('frequency_hours') == 6 else 'btn-gray' }}">6h</button>
+                    <button type="button" onclick="setFrequency(event, 4)" class="w-full py-3 px-6 rounded-full font-semibold text-lg {{ 'btn-green' if routine and routine.get('frequency_hours') == 4 else 'btn-gray' }}">4h</button>
+                </div>
             </div>
+
+            <div>
+                <label for="frequency_hours" class="block text-xl font-medium text-gray-700">Ou digite uma frequência personalizada (em horas)</label>
+                <input type="number" min="1" id="frequency_hours" name="frequency_hours" value="{{ routine.get('frequency_hours', '') if routine else '' }}" required class="mt-2 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm input-field text-lg" onkeydown="validateNumberInput(event)">
+            </div>
+            
+            <div>
+                <label for="total_qty" id="total-qty-label" class="block text-xl font-medium text-gray-700">Quantidade Total</label>
+                <input type="number" step="any" min="1" id="total_qty" name="total_qty" value="{{ '%.2f'|format(routine.get('total_qty', 0)) if routine and (routine.get('unit') == 'ml' or routine.get('unit') == 'gramas') else '%.0f'|format(routine.get('total_qty', 0)) if routine and routine.get('unit') == 'comprimidos' else '' }}" required class="mt-2 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm input-field text-lg" onkeydown="validateNumberInput(event)">
+            </div>
+
+            <div>
+                <label for="instructions" class="block text-xl font-medium text-gray-700">Instruções Adicionais</label>
+                <textarea id="instructions" name="instructions" rows="3" class="mt-2 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm input-field text-lg">{{ routine.get('instructions', '') if routine else '' }}</textarea>
+            </div>
+            
+            <div>
+                <label for="first_dose" class="block text-xl font-medium text-gray-700">Data e Hora da Primeira Dose</label>
+                <input type="datetime-local" id="first_dose" name="first_dose" value="{{ routine.get('first_dose').isoformat() if routine and routine.get('first_dose') else '' }}" required class="mt-2 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm input-field text-lg">
+            </div>
+
             <input type="hidden" id="unit" name="unit" value="{{ routine.get('unit') if routine else 'comprimidos' }}">
-            <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Salvar Rotina
-            </button>
+            
+            <div class="mt-8 space-y-4">
+                <label class="block text-xl font-bold text-gray-800">Fim do Tratamento</label>
+                <div class="flex items-center space-x-6">
+                    <label class="inline-flex items-center text-lg">
+                        <input type="radio" name="treatment_end_option" value="continuous" checked class="form-radio h-5 w-5 text-green-600" onchange="toggleEndDateField()">
+                        <span class="ml-2">Uso Contínuo</span>
+                    </label>
+                    <label class="inline-flex items-center text-lg">
+                        <input type="radio" name="treatment_end_option" value="finite" class="form-radio h-5 w-5 text-green-600" onchange="toggleEndDateField()">
+                        <span class="ml-2">Tem data para acabar</span>
+                    </label>
+                </div>
+                <div id="end_date_field" class="space-y-2 hidden">
+                    <label for="treatment_end_date" class="block text-xl font-medium text-gray-700">Data de Término</label>
+                    <input type="date" id="treatment_end_date" name="treatment_end_date" value="{{ routine.get('treatment_end_date').strftime('%Y-%m-%d') if routine and routine.get('treatment_end_date') else '' }}" class="mt-2 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm input-field text-lg">
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <label for="prescription_image" class="block text-xl font-medium text-gray-700">Anexar Receita (Opcional)</label>
+                <input type="file" id="prescription_image" name="prescription_image" accept="image/png, image/jpeg" class="mt-2 block w-full text-lg text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-lg file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+            </div>
+
+            <div class="space-y-4 pt-6">
+                <button type="submit" class="w-full py-4 px-6 rounded-lg shadow-md text-xl font-bold btn-green">
+                    Salvar Rotina
+                </button>
+                <a href="{{ url_for('dashboard') }}" class="block text-center mt-6 text-lg font-medium text-green-600 hover:text-green-700">Voltar para Página Principal</a>
+            </div>
         </form>
-        <a href="{{ url_for('dashboard') }}" class="mt-4 block text-center text-sm font-medium text-indigo-600 hover:text-indigo-500">Voltar para o Dashboard</a>
     </div>
 
     <script>
-        function setUnit(unit) {
-            document.getElementById('dose-qty-label').innerText = `Quantidade por Dose (${unit.charAt(0).toUpperCase() + unit.slice(1)})`;
-            document.getElementById('total-qty-label').innerText = `Quantidade Total (${unit.charAt(0).toUpperCase() + unit.slice(1)})`;
+        function setUnit(event, unit) {
+            const unitLabel = unit.charAt(0).toUpperCase() + unit.slice(1);
+            document.getElementById('dose-qty-label').innerText = `Quantidade por Dose (${unitLabel})`;
+            document.getElementById('total-qty-label').innerText = `Quantidade Total (${unitLabel})`;
             document.getElementById('unit').value = unit.toLowerCase();
 
-            // Atualiza o tipo de input baseado na unidade
-            const doseInput = document.getElementById('dose_qty');
-            const totalInput = document.getElementById('total_qty');
-            if (unit === 'comprimidos') {
-                doseInput.step = '1';
-                totalInput.step = '1';
-                doseInput.value = parseInt(doseInput.value);
-                totalInput.value = parseInt(totalInput.value);
-            } else {
-                doseInput.step = 'any';
-                totalInput.step = 'any';
+            document.querySelectorAll('button[onclick*="setUnit"]').forEach(btn => {
+                btn.classList.remove('btn-green');
+                btn.classList.add('btn-gray');
+            });
+            event.target.classList.remove('btn-gray');
+            event.target.classList.add('btn-green');
+        }
+
+        function setFrequency(event, hours) {
+            document.getElementById('frequency_hours').value = hours;
+
+            document.querySelectorAll('button[onclick*="setFrequency"]').forEach(btn => {
+                btn.classList.remove('btn-green');
+                btn.classList.add('btn-gray');
+            });
+            event.target.classList.remove('btn-gray');
+            event.target.classList.add('btn-green');
+        }
+        
+        document.getElementById('frequency_hours').addEventListener('input', () => {
+            document.querySelectorAll('button[onclick*="setFrequency"]').forEach(btn => {
+                btn.classList.remove('btn-green');
+                btn.classList.add('btn-gray');
+            });
+        });
+
+        function validateNumberInput(event) {
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+            const value = event.target.value;
+            const isDecimal = value.includes('.');
+            
+            if (isDecimal && event.key === '.') {
+                event.preventDefault();
+            }
+
+            if (!allowedKeys.includes(event.key) && isNaN(parseInt(event.key, 10)) && event.key !== '.') {
+                event.preventDefault();
             }
         }
 
+        function toggleEndDateField() {
+            const endField = document.getElementById('end_date_field');
+            const endOption = document.querySelector('input[name="treatment_end_option"]:checked').value;
+            const endDateInput = document.getElementById('treatment_end_date');
+
+            if (endOption === 'finite') {
+                endField.classList.remove('hidden');
+                endDateInput.setAttribute('required', '');
+            } else {
+                endField.classList.add('hidden');
+                endDateInput.removeAttribute('required');
+            }
+        }
+        
         window.onload = function() {
             const initialUnit = document.getElementById('unit').value;
             if (initialUnit) {
-                setUnit(initialUnit);
+                const buttons = document.querySelectorAll('button[onclick*="setUnit"]');
+                buttons.forEach(btn => {
+                    if (btn.innerText.toLowerCase().includes(initialUnit.toLowerCase())) {
+                        btn.classList.remove('btn-gray');
+                        btn.classList.add('btn-green');
+                    } else {
+                        btn.classList.remove('btn-green');
+                        btn.classList.add('btn-gray');
+                    }
+                });
+            }
+            
+            const initialFrequency = document.getElementById('frequency_hours').value;
+            if (initialFrequency) {
+                const buttons = document.querySelectorAll('button[onclick*="setFrequency"]');
+                buttons.forEach(btn => {
+                    if (btn.innerText.toLowerCase().includes(initialFrequency + 'h')) {
+                        btn.classList.remove('btn-gray');
+                        btn.classList.add('btn-green');
+                    } else {
+                        btn.classList.remove('btn-green');
+                        btn.classList.add('btn-gray');
+                    }
+                });
+            }
+            
+            const routineEndDate = '{{ routine.get("treatment_end_date", "") if routine else "" }}';
+            if (routineEndDate) {
+                document.querySelector('input[name="treatment_end_option"][value="finite"]').checked = true;
+                document.getElementById('end_date_field').classList.remove('hidden');
+                document.getElementById('treatment_end_date').setAttribute('required', '');
+            } else {
+                document.querySelector('input[name="treatment_end_option"][value="continuous"]').checked = true;
+                document.getElementById('end_date_field').classList.add('hidden');
             }
         }
     </script>
