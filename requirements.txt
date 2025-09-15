@@ -1,16 +1,3 @@
 Flask
 pymongo
 bcrypt
-
-
-Para executar no PowerSheell:
-# Criação do ambiente virtual
-python -m venv venv 
-# Ativação do ambiente virtual
-.\venv\Scripts\Activate.ps1
-# Instalação das dependências
-pip install -r requirements.txt
-# Desativação do ambiente virtual
-deactivate
-# Remoção do ambiente virtual
-Remove-Item -Recurse -Force venv
