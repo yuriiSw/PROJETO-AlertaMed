@@ -67,6 +67,40 @@
         .btn-refill:hover {
             background-color: #6d28d9;
         }
+
+
+
+
+        /* Estilos para o banner rotativo em tamanho menor */
+    .small-carousel-container {
+        overflow: hidden;
+        position: relative;
+        width: 100%;
+        max-width: 1800px; /* Largura máxima para o carrossel */
+        height: 500px; /* Altura fixa para o carrossel */
+        border-radius: 0.75rem; /* Bordas um pouco menores */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra mais suave */
+        margin: 2rem auto; /* Centraliza e adiciona margem superior e inferior */
+    }
+
+    .small-carousel-track {
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+        height: 100%; /* Garante que o track ocupe a altura total */
+    }
+
+    .small-carousel-slide {
+        flex: 0 0 100%;
+        height: 100%; /* Garante que cada slide ocupe a altura total */
+    }
+
+    .small-carousel-slide img {
+        width: 100%;
+        height: 100%; /* Faz a imagem preencher o slide */
+        object-fit: cover; /* Garante que a imagem cubra a área sem distorcer, cortando se necessário */
+        border-radius: 0.75rem;
+    }
+</style>
     </style>
 </head>
 <body class="min-h-screen">
@@ -86,7 +120,19 @@
                 <span>Adicionar Nova Rotina</span>
             </a>
         </div>
-
+<div class="small-carousel-container">
+    <div class="small-carousel-track" id="small-carousel-track">
+        <div class="small-carousel-slide">
+            <img src="{{ url_for('static', filename='imagens/idosos1.png') }}" alt="Idosos sorrindo">
+        </div>
+        <div class="small-carousel-slide">
+            <img src="{{ url_for('static', filename='imagens/idosos2.jpg') }}" alt="Idosos caminhando">
+        </div>
+        <div class="small-carousel-slide">
+            <img src="{{ url_for('static', filename='imagens/idosos3.jpg') }}" alt="Idosos lendo livro">
+        </div>
+    </div>
+</div>
         <div class="space-y-10">
             {% for routine in routines %}
             <div class="bg-white rounded-2xl shadow-xl p-8 sm:p-12 flex flex-col space-y-4">
@@ -189,6 +235,25 @@
             </div>
             {% endfor %}
         </div>
+
+
+        <script>
+    const smallCarouselTrack = document.getElementById('small-carousel-track');
+    const smallSlides = document.querySelectorAll('.small-carousel-slide');
+    let currentSmallSlide = 0;
+    const totalSmallSlides = smallSlides.length;
+
+    function updateSmallCarousel() {
+        smallCarouselTrack.style.transform = `translateX(-${currentSmallSlide * 100}%)`;
+    }
+
+    function nextSmallSlide() {
+        currentSmallSlide = (currentSmallSlide + 1) % totalSmallSlides;
+        updateSmallCarousel();
+    }
+
+    setInterval(nextSmallSlide, 5000); // Muda de slide a cada 5 segundos
+</script>
     </main>
 </body>
 </html>
