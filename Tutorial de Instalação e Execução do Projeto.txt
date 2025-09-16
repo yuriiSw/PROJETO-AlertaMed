@@ -1,101 +1,105 @@
-# Tutorial de Instalação e Execução do Projeto
+## Guia Completo: Instalação e Execução do Projeto
 
-Este tutorial guia você através da configuração e execução do projeto, desde a clonagem do repositório até o acesso à aplicação no navegador.
+Este tutorial foi feito para te ajudar a configurar e rodar o projeto do início ao fim. Siga os passos e, em pouco tempo, a aplicação estará funcionando no seu computador.
 
 ### Pré-requisitos
 
-Antes de começar, certifique-se de que você tem o seguinte instalado em seu computador:
+Antes de começar, certifique-se de que você tem as seguintes ferramentas instaladas:
 
   * **[Python 3.x](https://www.python.org/downloads/)**
   * **[Git](https://git-scm.com/downloads)**
-  * **[MongoDB](https://www.mongodb.com/try/download/community)** (certifique-se de que ele está rodando)
+  * **[MongoDB](https://www.mongodb.com/try/download/community)** (certifique-se de que o servidor está rodando)
 
 -----
 
 ### Passo 1: Clonar o Repositório
 
-Abra o seu terminal (Powershell no Windows, Terminal no MacOS/Linux) e use o Git para clonar o projeto para o seu computador.
+Abra seu terminal (como o PowerShell no Windows) e use o Git para copiar o projeto para o seu computador.
 
-```bash
-git clone https://github.com/nome-do-usuario/nome-do-repositorio.git
-```
 
-Substitua `nome-do-usuario` e `nome-do-repositorio` pelos dados corretos do projeto.
+git clone https://github.com/yuriiSw/PROJETO-AlertaMed.git
+
 
 -----
 
-### Passo 2: Navegar até a Pasta do Projeto
+### Passo 2: Acessar a Pasta do Projeto
 
 Entre na pasta do projeto que você acabou de clonar:
 
-```bash
+
 cd nome-do-repositorio
-```
+
 
 -----
 
-### Passo 3: Criar e Ativar o Ambiente Virtual
+### Passo 3: Configurar o Ambiente Virtual
 
-É uma boa prática isolar as dependências do projeto em um ambiente virtual. Isso evita conflitos com outras aplicações Python.
+Criar um ambiente virtual isola as dependências do projeto, evitando conflitos com outras aplicações Python.
 
 1.  **Crie o ambiente virtual:**
 
-    ```bash
+    
     python -m venv venv
-    ```
+    
 
 2.  **Ative o ambiente virtual:**
 
-      * **No Windows (Powershell):**
-        ```bash
-        .\venv\Scripts\activate
-        ```
-      * **No MacOS e Linux:**
-        ```bash
-        source venv/bin/activate
-        ```
+      * **No Windows (PowerShell):**
 
-    Você saberá que o ambiente está ativo quando `(venv)` aparecer no início da linha de comando.
+        
+        .\venv\Scripts\activate
+        
+
+        Se aparecer um erro de segurança, siga estes passos:
+
+          * Abra o **PowerShell como Administrador**.
+          * Execute o comando: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`
+          * Digite `S` para confirmar.
+          * Feche e abra um novo terminal para tentar ativar o ambiente virtual novamente.
+
+      * **No macOS e Linux:**
+
+        
+        source venv/bin/activate
+        
+
+Você saberá que o ambiente está ativo quando o texto `(venv)` aparecer no início da linha de comando.
 
 -----
 
 ### Passo 4: Instalar as Dependências
 
-Com o ambiente virtual ativo, instale todas as bibliotecas necessárias listadas no arquivo `requirements.txt`.
+Com o ambiente virtual ativo, instale todas as bibliotecas necessárias para o projeto:
 
-```bash
+
 pip install -r requirements.txt
-```
+
 
 -----
 
-### Passo 5: Configurar o MongoDB
+### Passo 5: Executar a Aplicação
 
-Certifique-se de que o seu servidor MongoDB está rodando. O projeto irá se conectar à sua instância local.
+Agora é só iniciar o servidor Flask. O arquivo principal da aplicação é o `app.py`.
 
-  * Verifique a sua string de conexão no código (`app.py` ou similar) para garantir que ela aponte para o seu servidor MongoDB. Exemplo:
-    ```python
-    mongo_uri = "mongodb://localhost:27017/nome-do-banco-de-dados"
-    ```
 
------
-
-### Passo 6: Executar a Aplicação
-
-Agora você pode iniciar o servidor Flask. O nome do arquivo principal da aplicação é `app.py`.
-
-```bash
 python app.py
-```
 
-Se tudo estiver correto, o terminal mostrará uma mensagem indicando que a aplicação está rodando, geralmente em `http://127.0.0.1:5000`.
+
+O terminal vai mostrar uma mensagem indicando que a aplicação está rodando, geralmente no endereço `http://127.0.0.1:5000`.
 
 -----
 
-### Passo 7: Acessar a Aplicação
+### Passo 6: Acessar a Aplicação
 
-Abra o seu navegador web e navegue para o endereço local:
+Abra seu navegador e acesse:
 
 `http://127.0.0.1:5000`
 
-A aplicação deve estar visível e funcionando.
+A aplicação deve estar funcionando perfeitamente.
+
+-----
+
+### Dicas Extras
+
+  * Para **desativar** o ambiente virtual, use o comando: `deactivate`.
+  * Se precisar de ajuda com o MongoDB, verifique a string de conexão no arquivo principal do projeto (`app.py`). Ela deve estar parecida com `"mongodb://localhost:27017/nome-do-banco-de-dados"`.
