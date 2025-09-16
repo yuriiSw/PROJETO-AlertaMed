@@ -193,18 +193,21 @@ def edit_routine(routine_id):
         remaining_qty = total_qty - (routine['total_qty'] - routine['remaining_qty'])
         if remaining_qty < 0: remaining_qty = 0
         
+        # A lógica de next_dose pode ser mais robusta, mas vamos focar na imagem
         new_next_dose = first_dose
-
+        
         treatment_end_date_str = request.form.get('treatment_end_date', '')
         if treatment_end_date_str:
             treatment_end_date = datetime.strptime(treatment_end_date_str, '%Y-%m-%d')
         else:
             treatment_end_date = None
 
-        prescription_image = routine.get('prescription_image')
+        prescription_image = routine.get('prescription_image') # Mantenha a imagem existente por padrão
+        
         if 'prescription_image' in request.files:
             file = request.files['prescription_image']
             if file and file.filename and allowed_file(file.filename):
+                # Se uma nova imagem foi enviada, remove a antiga, se houver
                 if prescription_image:
                     old_path = os.path.join(app.config['UPLOAD_FOLDER'], prescription_image)
                     if os.path.exists(old_path):
@@ -214,6 +217,13 @@ def edit_routine(routine_id):
                 unique_filename = f"{ObjectId()}_{filename}"
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
                 prescription_image = unique_filename
+        # Adicionamos um 'elif' para cobrir o cenário onde o usuário decide remover a imagem
+        elif 'delete_image' in request.form and request.form['delete_image'] == 'true':
+            if prescription_image:
+                old_path = os.path.join(app.config['UPLOAD_FOLDER'], prescription_image)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            prescription_image = None
         
         routines.update_one(
             {'_id': ObjectId(routine_id)},
@@ -237,6 +247,7 @@ def edit_routine(routine_id):
         flash('Rotina atualizada com sucesso!', 'success')
         return redirect(url_for('dashboard'))
         
+    # Quando o método é 'GET', passamos a rotina para o template
     return render_template('routine_form.html', routine=routine)
 
 # Rota para deletar uma rotina
