@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_apscheduler import APScheduler
 from database import users, routines, doses
 import bcrypt
@@ -41,7 +41,8 @@ def register():
     name = request.form['name']
 
     if users.find_one({'email': email}):
-        return 'E-mail já cadastrado!'
+        flash('E-mail já cadastrado!', 'error')
+        return redirect(url_for('index'))
 
     hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
 
@@ -52,6 +53,7 @@ def register():
     }).inserted_id
 
     session['user_id'] = str(user_id)
+    flash('Cadastro realizado com sucesso!', 'success')
     return redirect(url_for('dashboard'))
 
 # Rota para processar o login do usuário
@@ -64,9 +66,11 @@ def login():
 
     if user and bcrypt.checkpw(password, user['password']):
         session['user_id'] = str(user['_id'])
+        flash('Login bem-sucedido!', 'success')
         return redirect(url_for('dashboard'))
     else:
-        return 'E-mail ou senha inválidos!'
+        flash('E-mail ou senha inválidos!', 'error')
+        return redirect(url_for('index'))
 
 # Rota para o dashboard do usuário
 @app.route('/dashboard')
@@ -77,11 +81,34 @@ def dashboard():
     user_id = session['user_id']
     user = users.find_one({'_id': ObjectId(user_id)})
     
-    user_routines = routines.find({'user_id': ObjectId(user_id)})
+    all_routines = list(routines.find({'user_id': ObjectId(user_id)}))
     
-    sorted_routines = sorted(list(user_routines), key=lambda r: r.get('next_dose', datetime.max))
+    # Separar rotinas pendentes das futuras
+    now = datetime.now()
+    pending_routines = []
+    upcoming_routines = []
+    
+    for routine in all_routines:
+        if routine.get('next_dose') and routine['next_dose'] <= now + timedelta(minutes=30):
+            pending_routines.append(routine)
+        else:
+            upcoming_routines.append(routine)
 
-    return render_template('dashboard.html', user=user, routines=sorted_routines)
+    # Ordenar as rotinas futuras por próxima dose
+    sorted_upcoming_routines = sorted(upcoming_routines, key=lambda r: r.get('next_dose', datetime.max))
+
+    # Adicionando a lógica para o painel de resumo
+    refill_count = 0
+    for routine in all_routines:
+        if routine.get('remaining_qty', 0) <= routine.get('dose_qty', 0) * 2: # Exemplo: menos que 2 doses
+            refill_count += 1
+    
+    return render_template('dashboard.html', 
+        user=user, 
+        pending_routines=pending_routines,
+        upcoming_routines=sorted_upcoming_routines,
+        refill_count=refill_count
+    )
 
 # Rota para adicionar uma nova rotina
 @app.route('/add_routine', methods=['GET', 'POST'])
@@ -134,6 +161,7 @@ def add_routine():
             'prescription_image': prescription_image
         })
         
+        flash('Rotina adicionada com sucesso!', 'success')
         return redirect(url_for('dashboard'))
     
     return render_template('routine_form.html', routine=None)
@@ -147,7 +175,8 @@ def edit_routine(routine_id):
     routine = routines.find_one({'_id': ObjectId(routine_id)})
     
     if not routine:
-        return 'Rotina não encontrada!', 404
+        flash('Rotina não encontrada!', 'error')
+        return redirect(url_for('dashboard'))
         
     if request.method == 'POST':
         med_name = request.form['med_name']
@@ -205,6 +234,7 @@ def edit_routine(routine_id):
             }}
         )
         
+        flash('Rotina atualizada com sucesso!', 'success')
         return redirect(url_for('dashboard'))
         
     return render_template('routine_form.html', routine=routine)
@@ -222,44 +252,75 @@ def delete_routine(routine_id):
             os.remove(file_path)
     
     routines.delete_one({'_id': ObjectId(routine_id)})
+    flash('Rotina removida com sucesso!', 'success')
     return redirect(url_for('dashboard'))
 
 # Rota para sair da sessão
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
+    flash('Sessão encerrada com sucesso.', 'info')
     return redirect(url_for('index'))
 
-# Rota para tomar uma dose
+# Rota para tomar uma dose (CORRIGIDA)
 @app.route('/take_dose/<routine_id>', methods=['POST'])
 def take_dose(routine_id):
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
-    
-    routine = routines.find_one({'_id': ObjectId(routine_id)})
-    
-    if routine and routine['remaining_qty'] > 0:
-        new_remaining_qty = routine['remaining_qty'] - routine['dose_qty']
-        dose_time = datetime.now()
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': 'Não autenticado.'}), 401
         
-        new_next_dose = dose_time + timedelta(hours=routine['frequency_hours'])
+        routine_obj_id = ObjectId(routine_id)
+        routine = routines.find_one({'_id': routine_obj_id})
         
-        routines.update_one(
-            {'_id': ObjectId(routine_id)},
-            {'$set': {
-                'remaining_qty': new_remaining_qty,
-                'last_dose': dose_time,
-                'next_dose': new_next_dose,
-                'notified': False
-            }}
-        )
+        if not routine:
+            return jsonify({'success': False, 'message': 'Rotina não encontrada.'}), 404
+        
+        # Garante que as quantidades são tratadas como números, mesmo que o MongoDB as tenha salvo como strings
+        remaining_qty = float(routine.get('remaining_qty', 0))
+        dose_qty = float(routine.get('dose_qty', 0))
 
-        doses.insert_one({
-            'routine_id': ObjectId(routine_id),
-            'dose_time': dose_time
-        })
+        if remaining_qty >= dose_qty:
+            new_remaining_qty = remaining_qty - dose_qty
+            dose_time = datetime.now()
+            
+            frequency_hours = int(routine.get('frequency_hours', 24))
+            new_next_dose = dose_time + timedelta(hours=frequency_hours)
+            
+            routines.update_one(
+                {'_id': routine_obj_id},
+                {'$set': {
+                    'remaining_qty': new_remaining_qty,
+                    'last_dose': dose_time,
+                    'next_dose': new_next_dose,
+                    'notified': False
+                }}
+            )
 
-    return redirect(url_for('dashboard'))
+            doses.insert_one({
+                'routine_id': routine_obj_id,
+                'dose_time': dose_time
+            })
+
+            # Formata a quantidade restante para exibir corretamente na dashboard
+            if routine.get('unit') in ['ml', 'gramas']:
+                formatted_remaining_qty = f'{new_remaining_qty:.2f}'
+            else:
+                formatted_remaining_qty = f'{new_remaining_qty:.0f}'
+
+            return jsonify({
+                'success': True,
+                'message': 'Dose registrada com sucesso!',
+                'new_next_dose': new_next_dose.strftime('%d/%m/%Y às %H:%M'),
+                'new_remaining_qty': formatted_remaining_qty,
+                'total_qty': '{:.2f}'.format(routine['total_qty']) if routine.get('unit') in ['ml', 'gramas'] else '{:.0f}'.format(routine['total_qty']),
+                'unit': routine.get('unit')
+            })
+        else:
+            return jsonify({'success': False, 'message': 'Quantidade de medicamento insuficiente.'})
+            
+    except Exception as e:
+        print(f"Erro ao registrar dose: {e}")
+        return jsonify({'success': False, 'message': 'Ocorreu um erro interno ao registrar a dose.'}), 500
 
 # Rota para reabastecer uma rotina
 @app.route('/refill_routine/<routine_id>', methods=['POST'])
@@ -274,6 +335,9 @@ def refill_routine(routine_id):
             {'_id': ObjectId(routine_id)},
             {'$set': {'remaining_qty': routine['total_qty']}}
         )
+        flash('Rotina reabastecida com sucesso!', 'success')
+    else:
+        flash('Rotina não encontrada!', 'error')
 
     return redirect(url_for('dashboard'))
 
@@ -285,19 +349,65 @@ def dose_history(routine_id):
 
     routine = routines.find_one({'_id': ObjectId(routine_id)})
     if not routine:
-        return 'Rotina não encontrada!', 404
+        flash('Rotina não encontrada!', 'error')
+        return redirect(url_for('dashboard'))
         
     dose_history_list = list(doses.find({'routine_id': ObjectId(routine_id)}).sort('dose_time', -1))
 
     return render_template('history.html', routine=routine, doses=dose_history_list)
+
+# --- ROTAS DE REDEFINIÇÃO DE SENHA (SIMPLIFICADAS PARA PROJETO DE FACULDADE) ---
+
+# Rota para a página de solicitação de redefinição de senha
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = users.find_one({'email': email})
+
+        if user:
+            session['reset_email'] = email
+            flash('E-mail validado. Agora, digite sua nova senha.', 'info')
+            return redirect(url_for('reset_password_local'))
+        else:
+            flash('E-mail não encontrado.', 'error')
+            
+    return render_template('forgot_password.html')
+
+# Rota para a página de redefinição de senha (local)
+@app.route('/reset_password_local', methods=['GET', 'POST'])
+def reset_password_local():
+    if 'reset_email' not in session:
+        flash('Acesso negado. Por favor, digite seu e-mail para redefinir a senha.', 'warning')
+        return redirect(url_for('forgot_password'))
+
+    user = users.find_one({'email': session['reset_email']})
     
-# Rota para a página de redefinição de senha
-@app.route('/reset_password')
-def reset_password():
+    if not user:
+        flash('Usuário não encontrado. Por favor, tente novamente.', 'error')
+        session.pop('reset_email', None)
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        new_password = request.form['new_password'].encode('utf-8')
+        confirm_password = request.form['confirm_password'].encode('utf-8')
+
+        if new_password != confirm_password:
+            flash('As senhas não coincidem.', 'error')
+            return render_template('reset_password.html')
+        
+        hashed_password = bcrypt.hashpw(new_password, bcrypt.gensalt())
+        users.update_one({'_id': user['_id']}, {'$set': {'password': hashed_password}})
+        
+        session.pop('reset_email', None)
+
+        flash('Sua senha foi redefinida com sucesso! Você pode fazer login agora.', 'success')
+        return redirect(url_for('index'))
+
     return render_template('reset_password.html')
 
 # Função de notificação agendada
-@scheduler.task('interval', id='check_notifications', seconds=1)
+@scheduler.task('interval', id='check_notifications', seconds=10)
 def check_notifications():
     with app.app_context():
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Verificando rotinas para notificações...")

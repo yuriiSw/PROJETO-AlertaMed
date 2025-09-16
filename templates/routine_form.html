@@ -111,15 +111,15 @@
                 <label class="block text-xl font-bold text-gray-800">Fim do Tratamento</label>
                 <div class="flex items-center space-x-6">
                     <label class="inline-flex items-center text-lg">
-                        <input type="radio" name="treatment_end_option" value="continuous" checked class="form-radio h-5 w-5 text-green-600" onchange="toggleEndDateField()">
+                        <input type="radio" name="treatment_end_option" value="continuous" {{ 'checked' if not routine or not routine.get('treatment_end_date') }} class="form-radio h-5 w-5 text-green-600" onchange="toggleEndDateField()">
                         <span class="ml-2">Uso Contínuo</span>
                     </label>
                     <label class="inline-flex items-center text-lg">
-                        <input type="radio" name="treatment_end_option" value="finite" class="form-radio h-5 w-5 text-green-600" onchange="toggleEndDateField()">
+                        <input type="radio" name="treatment_end_option" value="finite" {{ 'checked' if routine and routine.get('treatment_end_date') }} class="form-radio h-5 w-5 text-green-600" onchange="toggleEndDateField()">
                         <span class="ml-2">Tem data para acabar</span>
                     </label>
                 </div>
-                <div id="end_date_field" class="space-y-2 hidden">
+                <div id="end_date_field" class="space-y-2 {{ 'hidden' if not routine or not routine.get('treatment_end_date') }}">
                     <label for="treatment_end_date" class="block text-xl font-medium text-gray-700">Data de Término</label>
                     <input type="date" id="treatment_end_date" name="treatment_end_date" value="{{ routine.get('treatment_end_date').strftime('%Y-%m-%d') if routine and routine.get('treatment_end_date') else '' }}" class="mt-2 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm input-field text-lg">
                 </div>
@@ -200,45 +200,9 @@
             }
         }
         
-        window.onload = function() {
-            const initialUnit = document.getElementById('unit').value;
-            if (initialUnit) {
-                const buttons = document.querySelectorAll('button[onclick*="setUnit"]');
-                buttons.forEach(btn => {
-                    if (btn.innerText.toLowerCase().includes(initialUnit.toLowerCase())) {
-                        btn.classList.remove('btn-gray');
-                        btn.classList.add('btn-green');
-                    } else {
-                        btn.classList.remove('btn-green');
-                        btn.classList.add('btn-gray');
-                    }
-                });
-            }
-            
-            const initialFrequency = document.getElementById('frequency_hours').value;
-            if (initialFrequency) {
-                const buttons = document.querySelectorAll('button[onclick*="setFrequency"]');
-                buttons.forEach(btn => {
-                    if (btn.innerText.toLowerCase().includes(initialFrequency + 'h')) {
-                        btn.classList.remove('btn-gray');
-                        btn.classList.add('btn-green');
-                    } else {
-                        btn.classList.remove('btn-green');
-                        btn.classList.add('btn-gray');
-                    }
-                });
-            }
-            
-            const routineEndDate = '{{ routine.get("treatment_end_date", "") if routine else "" }}';
-            if (routineEndDate) {
-                document.querySelector('input[name="treatment_end_option"][value="finite"]').checked = true;
-                document.getElementById('end_date_field').classList.remove('hidden');
-                document.getElementById('treatment_end_date').setAttribute('required', '');
-            } else {
-                document.querySelector('input[name="treatment_end_option"][value="continuous"]').checked = true;
-                document.getElementById('end_date_field').classList.add('hidden');
-            }
-        }
+        // Chamada da função ao carregar a página para definir o estado inicial
+        document.addEventListener('DOMContentLoaded', toggleEndDateField);
+
     </script>
 </body>
 </html>

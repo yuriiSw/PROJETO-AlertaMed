@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AlertaMed-Pagina Incial</title>
+    <title>AlertaMed</title>
     <link rel="icon" type="imagens/logo.png" href="{{ url_for('static', filename='imagens/logo.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -67,40 +67,32 @@
         .btn-refill:hover {
             background-color: #6d28d9;
         }
-
-
-
-
-        /* Estilos para o banner rotativo em tamanho menor */
-    .small-carousel-container {
-        overflow: hidden;
-        position: relative;
-        width: 100%;
-        max-width: 1800px; /* Largura máxima para o carrossel */
-        height: 500px; /* Altura fixa para o carrossel */
-        border-radius: 0.75rem; /* Bordas um pouco menores */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra mais suave */
-        margin: 2rem auto; /* Centraliza e adiciona margem superior e inferior */
-    }
-
-    .small-carousel-track {
-        display: flex;
-        transition: transform 0.5s ease-in-out;
-        height: 100%; /* Garante que o track ocupe a altura total */
-    }
-
-    .small-carousel-slide {
-        flex: 0 0 100%;
-        height: 100%; /* Garante que cada slide ocupe a altura total */
-    }
-
-    .small-carousel-slide img {
-        width: 100%;
-        height: 100%; /* Faz a imagem preencher o slide */
-        object-fit: cover; /* Garante que a imagem cubra a área sem distorcer, cortando se necessário */
-        border-radius: 0.75rem;
-    }
-</style>
+        
+        .small-carousel-container {
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            max-width: 1800px;
+            height: 500px;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+        }
+        .small-carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+        .small-carousel-slide {
+            flex: 0 0 100%;
+            height: 100%;
+        }
+        .small-carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.75rem;
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -112,6 +104,16 @@
     </header>
 
     <main class="container mx-auto px-6 py-12 pt-32">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="mb-6">
+              {% for category, message in messages %}
+                <div class="text-center py-2 px-4 rounded-md {{ 'bg-red-200 text-red-800' if category == 'error' else 'bg-green-200 text-green-800' }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
         <div class="mb-12">
             <a href="{{ url_for('add_routine') }}" class="w-full sm:w-auto py-5 px-12 rounded-full font-bold text-xl text-white btn-green hover:shadow-xl transition-all flex items-center justify-center space-x-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
@@ -120,114 +122,117 @@
                 <span>Adicionar Nova Rotina</span>
             </a>
         </div>
-<div class="small-carousel-container">
-    <div class="small-carousel-track" id="small-carousel-track">
-        <div class="small-carousel-slide">
-            <img src="{{ url_for('static', filename='imagens/idosos1.png') }}" alt="Idosos sorrindo">
+
+        <div class="small-carousel-container">
+            <div class="small-carousel-track" id="small-carousel-track">
+                <div class="small-carousel-slide">
+                    <img src="{{ url_for('static', filename='imagens/idosos1.png') }}" alt="Idosos sorrindo">
+                </div>
+                <div class="small-carousel-slide">
+                    <img src="{{ url_for('static', filename='imagens/idosos2.jpg') }}" alt="Idosos caminhando">
+                </div>
+                <div class="small-carousel-slide">
+                    <img src="{{ url_for('static', filename='imagens/idosos3.jpg') }}" alt="Idosos lendo livro">
+                </div>
+            </div>
         </div>
-        <div class="small-carousel-slide">
-            <img src="{{ url_for('static', filename='imagens/idosos2.jpg') }}" alt="Idosos caminhando">
+
+        {% if pending_routines %}
+        <div class="mb-12">
+            <h2 class="text-3xl font-bold text-red-600 mb-6">
+                <span class="text-4xl">❗️</span> Hora da Dose!
+            </h2>
+            <div class="space-y-10">
+                {% for routine in pending_routines %}
+                <div class="bg-red-50 border-4 border-red-400 rounded-2xl shadow-xl p-8 sm:p-12 flex flex-col space-y-4" data-routine-id="{{ routine._id }}">
+                    <div class="mb-6 pb-6 border-b-2 border-red-300">
+                        <h2 class="text-3xl font-bold text-red-800 mb-4">{{ routine.med_name }}</h2>
+                        <p class="text-xl text-red-700 leading-relaxed mb-2"><strong class="font-bold">Para:</strong> {{ routine.pacient_name }}</p>
+                        <p class="text-xl text-red-700 leading-relaxed mb-2"><strong class="font-bold">Dose:</strong> 
+                            {% if 'dose_qty' in routine %}{% if routine.unit == 'ml' or routine.unit == 'gramas' %}{{ '%.2f'|format(routine.dose_qty) }}{% else %}{{ '%.0f'|format(routine.dose_qty) }}{% endif %} {{ routine.unit }}{% else %}N/A{% endif %}
+                        </p>
+                        <p class="text-xl text-red-700 leading-relaxed mb-2"><strong class="font-bold">Frequência:</strong> a cada {{ routine.frequency_hours }}h</p>
+                        <p class="text-xl text-red-700 leading-relaxed mb-2"><strong class="font-bold">Próxima Dose:</strong> <span class="next-dose-time" data-next-dose="{{ routine.next_dose.isoformat() }}">{{ routine.next_dose.strftime('%d/%m/%Y às %H:%M') }}</span></p>
+                        <p class="text-xl text-red-700 leading-relaxed mb-2"><strong class="font-bold">Quantidade Restante:</strong> <span class="remaining-qty">{{ '%.2f'|format(routine.remaining_qty) if routine.unit in ['ml', 'gramas'] else '%.0f'|format(routine.remaining_qty) }}</span>/{{ '%.2f'|format(routine.total_qty) if routine.unit in ['ml', 'gramas'] else '%.0f'|format(routine.total_qty) }} {{ routine.unit }}</p>
+                        {% if routine.instructions %}<div class="bg-red-100 p-6 rounded-lg mb-6"><h4 class="text-xl font-bold text-gray-700 mb-2 flex items-center space-x-2"><span class="text-2xl">Instruções:</span></h4><p class="text-lg text-gray-700 whitespace-pre-wrap leading-relaxed">{{ routine.instructions }}</p></div>{% endif %}
+                    </div>
+                    <div class="mt-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <form class="take-dose-form w-full col-span-2" data-routine-id="{{ routine._id }}" action="{{ url_for('take_dose', routine_id=routine._id) }}" method="POST">
+                            <button type="submit" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-red flex items-center justify-center space-x-2 shadow-md take-dose-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm4.5 4.5l-6 6-3-3L6 9.5l3 3 7.5-7.5L16.5 6.5z"/></svg>
+                                <span>Tomar Dose</span>
+                            </button>
+                        </form>
+                        <a href="{{ url_for('edit_routine', routine_id=routine._id) }}" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-edit text-center flex items-center justify-center space-x-2 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            <span>Editar</span>
+                        </a>
+                        <a href="{{ url_for('dose_history', routine_id=routine._id) }}" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-history text-center flex items-center justify-center space-x-2 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3h-2v10h2V3zm4.5 4l-2.5 2.5V7h-2v4h2v-2.5l2.5-2.5zM12 21c4.97 0 9-4.03 9-9h-2c0 3.86-3.14 7-7 7s-7-3.14-7-7H3c0 4.97 4.03 9 9 9z"/></svg>
+                            <span>Histórico</span>
+                        </a>
+                        {% if routine.remaining_qty <= routine.dose_qty %}
+                        <form action="{{ url_for('refill_routine', routine_id=routine._id) }}" method="POST">
+                            <button type="submit" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-refill flex items-center justify-center space-x-2 shadow-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4.97 0-9 4.03-9 9s4.03 9 9 9c.77 0 1.5-.1 2.2-.27l1.76 1.76c.4.4 1.05.4 1.45 0 .4-.4.4-1.05 0-1.45L15.65 18c2.9-2.7 4.9-6.3 4.9-10zm-1 2c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z"/></svg>
+                                <span>Reabastecer</span>
+                            </button>
+                        </form>
+                        {% endif %}
+                        <form action="{{ url_for('delete_routine', routine_id=routine._id) }}" method="POST">
+                            <button type="submit" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-delete flex items-center justify-center space-x-2 shadow-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                <span>Deletar</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        <div class="small-carousel-slide">
-            <img src="{{ url_for('static', filename='imagens/idosos3.jpg') }}" alt="Idosos lendo livro">
-        </div>
-    </div>
-</div>
+        {% endif %}
+
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">Próximas Doses</h2>
         <div class="space-y-10">
-            {% for routine in routines %}
-            <div class="bg-white rounded-2xl shadow-xl p-8 sm:p-12 flex flex-col space-y-4">
+            {% for routine in upcoming_routines %}
+            <div class="bg-white rounded-2xl shadow-xl p-8 sm:p-12 flex flex-col space-y-4" data-routine-id="{{ routine._id }}">
                 <div class="mb-6 pb-6 border-b-2 border-gray-200">
                     <h2 class="text-3xl font-bold text-gray-800 mb-4">{{ routine.med_name }}</h2>
-                    <p class="text-xl text-gray-700 leading-relaxed mb-2">
-                        <strong class="font-bold">Para:</strong> {{ routine.pacient_name }}
+                    <p class="text-xl text-gray-700 leading-relaxed mb-2"><strong class="font-bold">Para:</strong> {{ routine.pacient_name }}</p>
+                    <p class="text-xl text-gray-700 leading-relaxed mb-2"><strong class="font-bold">Dose:</strong> 
+                        {% if 'dose_qty' in routine %}{% if routine.unit == 'ml' or routine.unit == 'gramas' %}{{ '%.2f'|format(routine.dose_qty) }}{% else %}{{ '%.0f'|format(routine.dose_qty) }}{% endif %} {{ routine.unit }}{% else %}N/A{% endif %}
                     </p>
-                    <p class="text-xl text-gray-700 leading-relaxed mb-2">
-                        <strong class="font-bold">Dose:</strong>
-                        {% if 'dose_qty' in routine %}
-                            {% if routine.unit == 'ml' or routine.unit == 'gramas' %}
-                                {{ '%.2f'|format(routine.dose_qty) }} {{ routine.unit }}
-                            {% else %}
-                                {{ '%.0f'|format(routine.dose_qty) }} {{ routine.unit }}
-                            {% endif %}
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </p>
-                    <p class="text-xl text-gray-700 leading-relaxed mb-2">
-                        <strong class="font-bold">Frequência:</strong> a cada {{ routine.frequency_hours }}h
-                    </p>
-                    <p class="text-xl text-gray-700 leading-relaxed mb-2">
-                        <strong class="font-bold">Início da Rotina:</strong> {{ routine.first_dose.strftime('%d/%m/%Y às %H:%M') if routine.first_dose else 'N/A' }}
-                    </p>
-                    <p class="text-xl text-gray-700 leading-relaxed mb-2">
-                        <strong class="font-bold">Próxima Dose:</strong> {{ routine.next_dose.strftime('%d/%m/%Y às %H:%M') if routine.next_dose else 'N/A' }}
-                    </p>
-                    <p class="text-xl text-gray-700 leading-relaxed mb-2">
-                        <strong class="font-bold">Quantidade Restante:</strong>
-                        {% if routine.unit == 'ml' or routine.unit == 'gramas' %}
-                            {{ '%.2f'|format(routine.remaining_qty) }}/{{ '%.2f'|format(routine.total_qty) }} {{ routine.unit }}
-                        {% else %}
-                            {{ '%.0f'|format(routine.remaining_qty) }}/{{ '%.0f'|format(routine.total_qty) }} {{ routine.unit }}
-                        {% endif %}
-                    </p>
-                    <p class="text-xl text-gray-700 leading-relaxed mb-2">
-                        <strong class="font-bold">Tratamento:</strong>
-                        {% if routine.treatment_end_date %}
-                            Termina em {{ routine.treatment_end_date.strftime('%d/%m/%Y') }}
-                        {% else %}
-                            Uso Contínuo
-                        {% endif %}
-                    </p>
+                    <p class="text-xl text-gray-700 leading-relaxed mb-2"><strong class="font-bold">Frequência:</strong> a cada {{ routine.frequency_hours }}h</p>
+                    <p class="text-xl text-gray-700 leading-relaxed mb-2"><strong class="font-bold">Próxima Dose:</strong> <span class="next-dose-time">{{ routine.next_dose.strftime('%d/%m/%Y às %H:%M') if routine.next_dose else 'N/A' }}</span></p>
+                    <p class="text-xl text-gray-700 leading-relaxed mb-2"><strong class="font-bold">Quantidade Restante:</strong> <span class="remaining-qty">{{ '%.2f'|format(routine.remaining_qty) if routine.unit in ['ml', 'gramas'] else '%.0f'|format(routine.remaining_qty) }}</span>/{{ '%.2f'|format(routine.total_qty) if routine.unit in ['ml', 'gramas'] else '%.0f'|format(routine.total_qty) }} {{ routine.unit }}</p>
+                    {% if routine.instructions %}<div class="bg-gray-100 p-6 rounded-lg mb-6"><h4 class="text-xl font-bold text-gray-700 mb-2 flex items-center space-x-2"><span class="text-2xl">Instruções:</span></h4><p class="text-lg text-gray-700 whitespace-pre-wrap leading-relaxed">{{ routine.instructions }}</p></div>{% endif %}
                 </div>
-                
-                {% if routine.instructions %}
-                <div class="bg-gray-100 p-6 rounded-lg mb-6">
-                    <h4 class="text-xl font-bold text-gray-700 mb-2 flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" viewBox="0 0 24 24" fill="currentColor">
-                           <path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm0 15a1 1 0 100-2 1 1 0 000 2zm0-10a1 1 0 00-1 1v4a1 1 0 102 0v-4a1 1 0 00-1-1z"/>
-                        </svg>
-                        <span class="text-2xl">Instruções:</span>
-                    </h4>
-                    <p class="text-lg text-gray-700 whitespace-pre-wrap leading-relaxed">{{ routine.instructions }}</p>
-                </div>
-                {% endif %}
-
                 <div class="mt-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    <form action="{{ url_for('take_dose', routine_id=routine._id) }}" method="POST">
-                        <button type="submit" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-green flex items-center justify-center space-x-2 shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm4.5 4.5l-6 6-3-3L6 9.5l3 3 7.5-7.5L16.5 6.5z"/>
-                            </svg>
+                    <form class="take-dose-form w-full col-span-2" data-routine-id="{{ routine._id }}" action="{{ url_for('take_dose', routine_id=routine._id) }}" method="POST">
+                        <button type="submit" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-green flex items-center justify-center space-x-2 shadow-md take-dose-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm4.5 4.5l-6 6-3-3L6 9.5l3 3 7.5-7.5L16.5 6.5z"/></svg>
                             <span>Tomar Dose</span>
                         </button>
                     </form>
                     <a href="{{ url_for('edit_routine', routine_id=routine._id) }}" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-edit text-center flex items-center justify-center space-x-2 shadow-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
                         <span>Editar</span>
                     </a>
                     <a href="{{ url_for('dose_history', routine_id=routine._id) }}" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-history text-center flex items-center justify-center space-x-2 shadow-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M13 3h-2v10h2V3zm4.5 4l-2.5 2.5V7h-2v4h2v-2.5l2.5-2.5zM12 21c4.97 0 9-4.03 9-9h-2c0 3.86-3.14 7-7 7s-7-3.14-7-7H3c0 4.97 4.03 9 9 9z"/>
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3h-2v10h2V3zm4.5 4l-2.5 2.5V7h-2v4h2v-2.5l2.5-2.5zM12 21c4.97 0 9-4.03 9-9h-2c0 3.86-3.14 7-7 7s-7-3.14-7-7H3c0 4.97 4.03 9 9 9z"/></svg>
                         <span>Histórico</span>
                     </a>
-                    {% if routine.remaining_qty == 0 %}
+                    {% if routine.remaining_qty <= routine.dose_qty %}
                     <form action="{{ url_for('refill_routine', routine_id=routine._id) }}" method="POST">
                         <button type="submit" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-refill flex items-center justify-center space-x-2 shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2c-4.97 0-9 4.03-9 9s4.03 9 9 9c.77 0 1.5-.1 2.2-.27l1.76 1.76c.4.4 1.05.4 1.45 0 .4-.4.4-1.05 0-1.45L15.65 18c2.9-2.7 4.9-6.3 4.9-10zm-1 2c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z"/>
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4.97 0-9 4.03-9 9s4.03 9 9 9c.77 0 1.5-.1 2.2-.27l1.76 1.76c.4.4 1.05.4 1.45 0 .4-.4.4-1.05 0-1.45L15.65 18c2.9-2.7 4.9-6.3 4.9-10zm-1 2c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z"/></svg>
                             <span>Reabastecer</span>
                         </button>
                     </form>
                     {% endif %}
                     <form action="{{ url_for('delete_routine', routine_id=routine._id) }}" method="POST">
                         <button type="submit" class="w-full py-4 px-6 rounded-lg font-bold text-lg text-white btn-delete flex items-center justify-center space-x-2 shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
                             <span>Deletar</span>
                         </button>
                     </form>
@@ -235,25 +240,86 @@
             </div>
             {% endfor %}
         </div>
-
-
-        <script>
-    const smallCarouselTrack = document.getElementById('small-carousel-track');
-    const smallSlides = document.querySelectorAll('.small-carousel-slide');
-    let currentSmallSlide = 0;
-    const totalSmallSlides = smallSlides.length;
-
-    function updateSmallCarousel() {
-        smallCarouselTrack.style.transform = `translateX(-${currentSmallSlide * 100}%)`;
-    }
-
-    function nextSmallSlide() {
-        currentSmallSlide = (currentSmallSlide + 1) % totalSmallSlides;
-        updateSmallCarousel();
-    }
-
-    setInterval(nextSmallSlide, 5000); // Muda de slide a cada 5 segundos
-</script>
     </main>
+    
+    <script>
+        // Lógica do carrossel (mantida)
+        const smallCarouselTrack = document.getElementById('small-carousel-track');
+        const smallSlides = document.querySelectorAll('.small-carousel-slide');
+        let currentSmallSlide = 0;
+        const totalSmallSlides = smallSlides.length;
+        function updateSmallCarousel() {
+            smallCarouselTrack.style.transform = `translateX(-${currentSmallSlide * 100}%)`;
+        }
+        function nextSmallSlide() {
+            currentSmallSlide = (currentSmallSlide + 1) % totalSmallSlides;
+            updateSmallCarousel();
+        }
+        setInterval(nextSmallSlide, 5000);
+
+        // Lógica de feedback para o botão "Tomar Dose"
+        document.addEventListener('DOMContentLoaded', () => {
+            const takeDoseForms = document.querySelectorAll('.take-dose-form');
+            takeDoseForms.forEach(form => {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    
+                    const routineId = form.getAttribute('data-routine-id');
+                    const button = form.querySelector('.take-dose-btn');
+                    
+                    button.disabled = true;
+                    const originalText = button.querySelector('span').textContent;
+                    const originalBg = button.classList.contains('btn-green') ? 'btn-green' : 'btn-red';
+                    
+                    // Altera a aparência do botão para feedback
+                    button.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                    button.classList.remove(originalBg);
+                    button.querySelector('span').textContent = 'Registrando...';
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST'
+                        });
+                        
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Atualiza a interface
+                            const routineCard = document.querySelector(`[data-routine-id="${routineId}"]`);
+                            if (routineCard) {
+                                routineCard.querySelector('.next-dose-time').textContent = result.new_next_dose;
+                                routineCard.querySelector('.remaining-qty').textContent = result.new_remaining_qty;
+                            }
+
+                            // Feedback visual de sucesso
+                            button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                            button.classList.add('bg-green-500', 'hover:bg-green-600');
+                            button.querySelector('span').textContent = 'Concluído!';
+                            setTimeout(() => {
+                                button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                                button.classList.add(originalBg);
+                                button.querySelector('span').textContent = originalText;
+                                button.disabled = false;
+                            }, 2000);
+                        } else {
+                            // Feedback visual de erro
+                            alert(result.message);
+                            button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                            button.classList.add(originalBg);
+                            button.querySelector('span').textContent = originalText;
+                            button.disabled = false;
+                        }
+                    } catch (error) {
+                        console.error('Erro:', error);
+                        alert('Ocorreu um erro ao registrar a dose.');
+                        button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        button.classList.add(originalBg);
+                        button.querySelector('span').textContent = originalText;
+                        button.disabled = false;
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
