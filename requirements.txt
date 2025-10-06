@@ -1,6 +1,5 @@
 Flask
 pymongo
 bcrypt
-Flask-Mail
 Flask-APScheduler
 python-dotenv
